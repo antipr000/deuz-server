@@ -6,6 +6,7 @@ import io
 from firebase_admin.auth import verify_id_token
 from firebase_admin import initialize_app, credentials
 from firebase_credentials import cert_dict
+import requests
 
 app = Flask(__name__)
 
@@ -17,6 +18,16 @@ def auth():
     id_token = body["idToken"]
     decoded_token = verify_id_token(id_token)
     return jsonify({"uid": decoded_token["uid"]})
+
+
+@app.route("/geolocation", methods=["GET"])
+@cross_origin()
+def get_geolocation():
+    ip = request.args.get("ip")
+    print(ip)
+    response = requests.get("http://ip-api.com/json/" + ip)
+    data = response.json()
+    return jsonify(data)
 
 
 @app.route("/removebg", methods=["POST"])
