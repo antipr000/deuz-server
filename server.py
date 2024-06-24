@@ -32,6 +32,15 @@ def get_geolocation():
     data = response.json()
     return jsonify(data)
 
+@app.route("/weather", methods=["GET"])
+@cross_origin()
+def get_weather():
+    lat = request.args.get("lat")
+    lon = request.args.get("lon")
+    response = requests.get(f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current=temperature_2m")
+    data = response.json()
+    return jsonify(data)
+
 
 @app.route("/removebg", methods=["POST"])
 @cross_origin()
