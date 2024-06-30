@@ -6,7 +6,8 @@ import io
 from firebase_admin.auth import verify_id_token
 from firebase_admin import initialize_app, credentials
 from firebase_credentials import cert_dict
-from super_image import EdsrModel, ImageLoader
+import numpy as np
+import cv2
 import requests
 import os
 
@@ -79,16 +80,19 @@ def upscale():
     try:
         scale_factor = request.form.get("scale", default=2, type=int)
         input_image = Image.open(file.stream)
-        model = EdsrModel.from_pretrained("eugenesiow/edsr-base", scale=scale_factor)
-        inputs = ImageLoader.load_image(input_image)
-        preds = model(inputs)
-        file_name = file_name.split(".")[0] + ".png"
-        ImageLoader.save_image(preds, file_name)
+
+        # Convert PIL Image to NumPy array
+        input_image_np = np.array(input_image)
+
+        # Resize the image using OpenCV
+        output_image = cv2.resize(input_image_np, None, fx=scale_factor, fy=scale_factor, interpolation=cv2.INTER_CUBIC)
+
+        # Convert the resized image back to PIL Image
+        output_image_pil = Image.fromarray(output_image)
+
         img_byte_arr = io.BytesIO()
-        pil_image = Image.open(file_name)
-        pil_image.save(img_byte_arr, format="PNG")
+        output_image_pil.save(img_byte_arr, format="PNG")
         img_byte_arr.seek(0)
-        os.remove(file_name)
         return send_file(img_byte_arr, mimetype="image/png")
     except Exception as e:
         return jsonify({"error": str(e)}), 500
